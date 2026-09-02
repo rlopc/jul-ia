@@ -26,6 +26,13 @@ hooks are the single definition of what lint, formatting and type checks have to
 pass. Tests run as their own step: `uv run pytest`. Reproduce a CI failure with
 whichever of the two matches the failing step.
 
+The `Makefile` wraps those commands — `make install`, `make check`, `make help`
+for the rest. They are shortcuts, not a second definition: anything narrower
+than a whole target, such as one test or one path, goes through `uv run`
+directly. `make check` differs from the CI step in one detail, `SKIP` (see the
+gitleaks and `no-commit-to-branch` entries below); on a branch with a clean
+index neither hook has anything to say, so the two agree in practice.
+
 ## Workflow
 
 **`main` is protected by a ruleset: direct pushes are rejected.** Every change
@@ -44,9 +51,11 @@ gh pr checks <n> --watch && gh pr merge <n> --squash --delete-branch
 Branch and commit prefixes in use: `feat/`, `fix/`, `chore/`, `ci/`, `docs/`.
 
 Rules active on `main`: pull request required, the `check` job green, the branch
-up to date before merging, **signed commits**, **squash as the only merge
-method**, and no force-push or deletion. Approvals are set to 0 because there is
-a single maintainer today; raise it to 1 as soon as a second person joins.
+up to date before merging, **every review thread resolved**, **signed commits**,
+**squash as the only merge method**, and no force-push or deletion. Approvals
+are set to 0 because there is a single maintainer today; raise it to 1 as soon
+as a second person joins. Thread resolution blocks a merge regardless of that
+count, so an unresolved comment of your own is enough to hold a pull request.
 
 Squash-only keeps history linear and one commit per pull request, which is what
 makes the title conventions above meaningful: the pull request title *is* the

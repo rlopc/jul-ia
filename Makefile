@@ -14,11 +14,12 @@ install: ## Sync the environment and install the git hooks
 	uv sync
 	uv run pre-commit install
 
-# Everything that rewrites files, in the order the hooks apply it: the
-# formatter first, then the lint fixes.
+# Everything that rewrites files. The linter goes first because its fixes can
+# leave the file unformatted — it is the half that sorts imports — which is the
+# order ruff documents and the order the hooks use.
 fix: ## Format and apply lint fixes in place
-	uv run ruff format .
 	uv run ruff check --fix .
+	uv run ruff format .
 
 lint: ## Lint without modifying anything
 	uv run ruff check .
