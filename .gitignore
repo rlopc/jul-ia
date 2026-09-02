@@ -32,6 +32,9 @@ build/
 !.vscode/settings.json
 !.vscode/extensions.json
 
+# Claude Code: project instructions are shared, personal notes are not
+CLAUDE.local.md
+
 # Local data and OS
 *.db
 .DS_Store
