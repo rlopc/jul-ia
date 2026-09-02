@@ -43,6 +43,10 @@ jobs:
             Dependabot does not cover `.pre-commit-config.yaml`, so this workflow
             keeps the pinned hook revisions current.
 
+            Check that each revision is newer than the one it replaces. Projects
+            that tag patch releases off a side branch are resolved to the newest
+            tag reachable from their default branch, which can be older.
+
             Note: pull requests opened with `GITHUB_TOKEN` do not trigger other
             workflows, so CI will not start on its own. Close and reopen this PR
             to run it before merging.
