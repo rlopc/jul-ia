@@ -1,0 +1,4 @@
+# Declares who answers for what. With a single owner this assigns no reviewer,
+# but the ruleset can start requiring code owner review as soon as there is a
+# second person.
+* @rlopc
