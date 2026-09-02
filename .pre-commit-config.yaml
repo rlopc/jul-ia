@@ -1,0 +1,38 @@
+# Git hooks run on every commit. Install once with: uv run pre-commit install
+repos:
+  # ruff runs from the project environment rather than a copy pre-commit fetches
+  # itself, so uv.lock is the single source of the version. The editor and CI
+  # already resolve it the same way; a pinned `rev` here would be a fourth place
+  # to keep in sync by hand. The trade-off: these hooks need a synced .venv, so
+  # an out-of-date environment fails the commit instead of silently running a
+  # different ruff. `--force-exclude` makes ruff honour its own exclude settings
+  # even though pre-commit passes the files explicitly.
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run ruff check --force-exclude --fix
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+      - id: ruff-format
+        name: ruff format
+        entry: uv run ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v6.0.0
+    hooks:
+      # Only catches PEM/SSH/PGP key headers — it will NOT catch a pasted
+      # API key. What protects against that is `.env` being gitignored;
+      # add gitleaks if you want real secret scanning.
+      - id: detect-private-key
+      - id: check-added-large-files
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      # Catch a broken workflow or pyproject before pushing, not in CI.
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict

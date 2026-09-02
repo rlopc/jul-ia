@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# A newer push supersedes a run still in flight on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # Caching is left at its `auto` default, which enables it for push and
+      # pull_request but not for events where a poisoned cache would be a
+      # security problem.
+      - uses: astral-sh/setup-uv@v10
+
+      # --locked fails if uv.lock no longer matches pyproject.toml, instead of
+      # quietly resolving something the developer never tested. The Python
+      # version comes from .python-version.
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Lint
+        run: uv run ruff check .
+
+      - name: Check formatting
+        run: uv run ruff format --check .
+
+      - name: Test
+        run: uv run pytest
