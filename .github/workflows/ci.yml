@@ -23,7 +23,7 @@ jobs:
       # Caching is left at its `auto` default, which enables it for push and
       # pull_request but not for events where a poisoned cache would be a
       # security problem.
-      - uses: astral-sh/setup-uv@v10
+      - uses: astral-sh/setup-uv@v10.0.1
 
       # --locked fails if uv.lock no longer matches pyproject.toml, instead of
       # quietly resolving something the developer never tested. The Python
