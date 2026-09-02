@@ -1,7 +1,9 @@
 [project]
 name = "jul-ia"
 version = "0.1.0"
-description = "Add your description here"
+description = "Agentic system that carries out user tasks across different domains"
+license = "Apache-2.0"
+license-files = ["LICENSE"]
 readme = "README.md"
 authors = [
     { name = "rlopc", email = "rlopc4dev@gmail.com" }
