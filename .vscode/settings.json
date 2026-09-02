@@ -1,0 +1,23 @@
+{
+  // Use the ruff and mypy from .venv instead of the copies bundled with the
+  // extensions. Otherwise the editor can disagree with pre-commit and CI, which
+  // run the versions pinned in uv.lock.
+  "ruff.importStrategy": "fromEnvironment",
+  "mypy-type-checker.importStrategy": "fromEnvironment",
+  // mypy needs the whole project to resolve imports, same reason the pre-commit
+  // hook passes no filenames.
+  "mypy-type-checker.reportingScope": "workspace",
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/bin/python",
+  "python.testing.pytestEnabled": true,
+
+  "[python]": {
+    "editor.defaultFormatter": "charliermarsh.ruff",
+    "editor.formatOnSave": true,
+    // Same order as .pre-commit-config.yaml: lint fixes first, then formatting,
+    // because a fix can leave the file unformatted.
+    "editor.codeActionsOnSave": {
+      "source.fixAll.ruff": "explicit",
+      "source.organizeImports.ruff": "explicit"
+    }
+  }
+}
