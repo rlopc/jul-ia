@@ -8,8 +8,15 @@ readme = "README.md"
 authors = [
     { name = "rlopc", email = "rlopc4dev@gmail.com" }
 ]
+# PyPI rejects anything whose classifier starts with `Private ::`. This project
+# is not meant to be published, so the rejection is the point: it is the last
+# barrier if a `uv publish` ever escapes.
+classifiers = ["Private :: Do Not Upload"]
 requires-python = ">=3.14"
 dependencies = []
+
+[project.urls]
+Repository = "https://github.com/rlopc/jul-ia"
 
 [dependency-groups]
 dev = [
@@ -19,34 +26,74 @@ dev = [
     "ruff>=0.16.5",
 ]
 
-[project.scripts]
-jul-ia = "jul_ia:main"
-
 [build-system]
 requires = ["uv_build>=0.12.3,<0.13.0"]
 build-backend = "uv_build"
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "-ra --strict-markers"
+# --strict-config turns an unknown key in this table into an error rather than a
+# setting that silently does nothing. importlib is not the default yet in pytest
+# 9, and it is the mode that matches an installed src-layout package.
+addopts = "-ra --strict-markers --strict-config --import-mode=importlib"
+# A test that passes while still marked xfail is a signal, not a success.
+xfail_strict = true
+# A DeprecationWarning from a dependency should fail the run, not scroll past.
+filterwarnings = ["error"]
 
 [tool.ruff.lint]
+# INP is left out on purpose: it wants an `__init__.py` in `tests`, which is
+# exactly what --import-mode=importlib exists to avoid. COM, Q, ISC001 and the
+# indentation half of pycodestyle are left out because ruff documents them as
+# fighting its own formatter.
 select = [
-    "B",   # flake8-bugbear: likely bugs and design issues
-    "E",   # pycodestyle errors
-    "F",   # pyflakes: unused imports, undefined names
-    "I",   # isort: import sorting
-    "RUF", # ruff-specific rules
-    "SIM", # flake8-simplify: flags code that can be simplified
-    "UP",  # pyupgrade: modernize syntax for the target Python version
+    "A",     # flake8-builtins: names that shadow a builtin
+    "ASYNC", # flake8-async: blocking calls inside async functions
+    "B",     # flake8-bugbear: likely bugs and design issues
+    "BLE",   # flake8-blind-except: `except Exception` swallowing everything
+    "C4",    # flake8-comprehensions
+    "DTZ",   # flake8-datetimez: timezone-naive datetimes
+    "E",     # pycodestyle errors
+    "EXE",   # flake8-executable: shebangs that disagree with the file mode
+    "F",     # pyflakes: unused imports, undefined names
+    "FLY",   # flynt: static string joins that should be f-strings
+    "G",     # flake8-logging-format: eager formatting in logging calls
+    "I",     # isort: import sorting
+    "LOG",   # flake8-logging: misuse of the logging module
+    "N",     # pep8-naming
+    "PGH",   # pygrep-hooks: blanket noqa / type: ignore
+    "PIE",   # flake8-pie: assorted dead or redundant constructs
+    "PT",    # flake8-pytest-style
+    "PTH",   # flake8-use-pathlib
+    "RSE",   # flake8-raise: redundant parentheses on raise
+    "RUF",   # ruff-specific rules
+    "S",     # flake8-bandit: security anti-patterns
+    "SIM",   # flake8-simplify: flags code that can be simplified
+    "SLF",   # flake8-self: access to another object's private members
+    "T10",   # flake8-debugger: a breakpoint() left behind
+    "TID",   # flake8-tidy-imports: relative imports reaching past the package
+    "UP",    # pyupgrade: modernize syntax for the target Python version
+    "YTT",   # flake8-2020: fragile sys.version comparisons
 ]
+
+[tool.ruff.lint.per-file-ignores]
+# assert is what a test is made of; S101 only means something outside tests.
+"tests/**" = ["S101"]
 
 [tool.mypy]
 strict = true
 files = [
-  "src",
-  "tests",
+    "src",
+    "tests",
 ]
 # strict does not include this one; it catches code that can never run,
 # which is usually a logic error rather than a style issue.
 warn_unreachable = true
+# A bare `# type: ignore` hides whichever error appears there next; the rest
+# catch conditions the type checker already knows are constant.
+enable_error_code = [
+    "ignore-without-code",
+    "redundant-expr",
+    "truthy-bool",
+    "possibly-undefined",
+]
