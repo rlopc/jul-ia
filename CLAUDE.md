@@ -21,6 +21,11 @@ uv run pre-commit install      # git hooks, once per clone
 uv run pre-commit run --all-files
 ```
 
+CI runs `pre-commit run --all-files` rather than the individual tools, so the
+hooks are the single definition of what lint, formatting and type checks have to
+pass. Tests run as their own step: `uv run pytest`. Reproduce a CI failure with
+whichever of the two matches the failing step.
+
 ## Workflow
 
 **`main` is protected by a ruleset: direct pushes are rejected.** Every change
@@ -39,9 +44,14 @@ gh pr checks <n> --watch && gh pr merge <n> --squash --delete-branch
 Branch and commit prefixes in use: `feat/`, `fix/`, `chore/`, `ci/`, `docs/`.
 
 Rules active on `main`: pull request required, the `check` job green, the branch
-up to date before merging, **signed commits**, and no force-push or deletion.
-Approvals are set to 0 because there is a single maintainer today; raise it to 1
-as soon as a second person joins.
+up to date before merging, **signed commits**, **squash as the only merge
+method**, and no force-push or deletion. Approvals are set to 0 because there is
+a single maintainer today; raise it to 1 as soon as a second person joins.
+
+Squash-only keeps history linear and one commit per pull request, which is what
+makes the title conventions above meaningful: the pull request title *is* the
+commit message. Merge commits and rebase merges are disabled at the repository
+level too, so the buttons do not appear at all.
 
 The ruleset is versioned in `.github/rulesets/main.json`, but GitHub **does not
 read it from there**: it is auditable documentation. Editing it changes nothing
@@ -65,6 +75,17 @@ Things that cost time to rediscover:
   an exact version is required. `actions/checkout` does publish them.
 - **Actions are pinned by SHA** with the readable version in a trailing comment.
   Dependabot reads that comment to update them; do not remove it.
+- **The gitleaks hook only sees the staged diff.** Its entry is
+  `gitleaks git --pre-commit --staged`, so on a clean checkout it scans zero
+  bytes and reports success. It is worthless outside an actual commit, which is
+  why CI skips it instead of pretending to cover secrets there. `entry` cannot
+  be overridden from `.pre-commit-config.yaml`, so the command itself is not
+  adjustable.
+- **`no-commit-to-branch` has to be skipped in CI as well.** `actions/checkout`
+  leaves a detached HEAD on a pull request but creates the local branch on a
+  push, so on `push: main` the hook finds itself on `main` and fails every merge
+  run. Both skips travel together in `SKIP=gitleaks,no-commit-to-branch`; the
+  hook guards the developer's commit, which is a local concern.
 - **`pre-commit autoupdate` can propose downgrades.** `gitleaks v8.30.1` is
   tagged off the project's side branch, so autoupdate resolves `v8.30.0`, which
   is older. Check that every proposed revision is newer before merging.
@@ -82,6 +103,10 @@ Three layers against credential leaks, in order: `.gitignore` keeps `.env` out o
 the index, **gitleaks** stops the commit locally, and GitHub **push protection**
 blocks at the server. All three were verified by making them fire, not just by
 configuring them.
+
+The middle layer is local only. CI cannot repeat it — see the gitleaks entry
+under known pitfalls — so push protection is what covers a contributor who never
+installed the hooks.
 
 `secret_scanning_non_provider_patterns` and `secret_scanning_validity_checks`
 **cannot be enabled**: they require a paid plan. The API answers 200 and ignores

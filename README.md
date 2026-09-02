@@ -15,8 +15,10 @@ Agentic system that carries out user tasks across different domains.
 
 ```bash
 uv sync
-cp .env.example .env  # then add your ANTHROPIC_API_KEY
 ```
+
+`.env.example` lists the variables the agent will need. No code reads them yet,
+so there is nothing to copy until the agent lands.
 
 ## Development
 
