@@ -35,8 +35,8 @@ repos:
     rev: v6.0.0
     hooks:
       # Only catches PEM/SSH/PGP key headers — it will NOT catch a pasted
-      # API key. What protects against that is `.env` being gitignored;
-      # add gitleaks if you want real secret scanning.
+      # API key. `.env` being gitignored and the gitleaks hook below are what
+      # cover that.
       - id: detect-private-key
       - id: check-added-large-files
       - id: end-of-file-fixer
