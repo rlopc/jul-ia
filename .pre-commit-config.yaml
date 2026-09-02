@@ -21,6 +21,15 @@ repos:
         language: system
         types_or: [python, pyi]
         require_serial: true
+      # mypy needs the whole project to resolve imports, so it ignores the file
+      # list pre-commit passes and analyses the paths configured in pyproject.
+      - id: mypy
+        name: mypy
+        entry: uv run mypy
+        language: system
+        types_or: [python, pyi]
+        pass_filenames: false
+        require_serial: true
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v6.0.0

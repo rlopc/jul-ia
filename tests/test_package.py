@@ -1,4 +1,4 @@
-def test_package_is_importable():
+def test_package_is_importable() -> None:
     """The src layout only works if the package is installed into the venv."""
     import jul_ia
 
