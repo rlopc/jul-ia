@@ -1,0 +1,49 @@
+name: pre-commit autoupdate
+
+# Dependabot has no ecosystem for .pre-commit-config.yaml, so the pinned `rev`
+# values there would stay frozen forever. This is their updater.
+on:
+  schedule:
+    # Mondays at 06:00 UTC, ahead of the working week.
+    - cron: "0 6 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  autoupdate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+      - name: Install dependencies
+        run: uv sync --locked
+
+      - name: Update hook revisions
+        run: uv run pre-commit autoupdate
+
+      # Runs the updated hooks over the whole repo so the PR only appears when
+      # the new versions actually work. `|| true` keeps the job alive when a
+      # hook rewrites a file, which is a fix to include rather than a failure.
+      - name: Run updated hooks
+        run: uv run pre-commit run --all-files || true
+
+      - uses: peter-evans/create-pull-request@5f6978faf089d4d20b00c7766989d076bb2fc7f1 # v8.1.1
+        with:
+          branch: ci/pre-commit-autoupdate-run
+          title: "ci: update pre-commit hook revisions"
+          commit-message: "ci: update pre-commit hook revisions"
+          body: |
+            Automated `pre-commit autoupdate`.
+
+            Dependabot does not cover `.pre-commit-config.yaml`, so this workflow
+            keeps the pinned hook revisions current.
+
+            Note: pull requests opened with `GITHUB_TOKEN` do not trigger other
+            workflows, so CI will not start on its own. Close and reopen this PR
+            to run it before merging.
+          delete-branch: true
