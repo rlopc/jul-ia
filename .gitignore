@@ -27,6 +27,11 @@ build/
 .pytest_cache/
 .mypy_cache/
 
+# Editor: share project settings, keep personal ones out
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
 # Local data and OS
 *.db
 .DS_Store
