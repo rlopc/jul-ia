@@ -9,6 +9,11 @@ updates:
     groups:
       actions:
         patterns: ["*"]
+    # Merges are squashed, so the pull request title becomes the commit message.
+    # Dependabot infers a prefix from repository history; stating it keeps the
+    # convention deterministic instead of guessed.
+    commit-message:
+      prefix: "ci"
 
   # uv is a native ecosystem: Dependabot reads pyproject.toml and uv.lock.
   - package-ecosystem: "uv"
@@ -18,3 +23,8 @@ updates:
     groups:
       python:
         patterns: ["*"]
+    # Both prefixes are set because every dependency today lives in the dev
+    # group, and runtime dependencies will not.
+    commit-message:
+      prefix: "chore"
+      prefix-development: "chore"

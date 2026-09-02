@@ -15,10 +15,19 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # The job id is the name of the required status check the ruleset asks for.
+  # Adding a `name:` here renames that check and blocks every pull request.
   check:
     runs-on: ubuntu-latest
+    # The default is 360 minutes. This job takes about two, so anything past ten
+    # is a hang, and without a limit a hang burns six hours of runner time.
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # No step in this job talks to git, so the checkout token has no
+          # reason to stay readable by everything that runs after it.
+          persist-credentials: false
 
       # Caching is left at its `auto` default, which enables it for push and
       # pull_request but not for events where a poisoned cache would be a
@@ -31,14 +40,24 @@ jobs:
       - name: Install dependencies
         run: uv sync --locked
 
-      - name: Lint
-        run: uv run ruff check .
-
-      - name: Check formatting
-        run: uv run ruff format --check .
-
-      - name: Type check
-        run: uv run mypy
+      # The same hooks a commit runs locally, so none of them depend on the
+      # contributor having run `pre-commit install`. This covers ruff, the
+      # formatter, mypy and the file hygiene checks in one step.
+      #
+      # gitleaks is skipped on purpose: its hook scans the staged diff, which is
+      # empty on a fresh checkout, so it would report success having read zero
+      # bytes. Skipping it also avoids building the Go binary for nothing.
+      # Secrets are caught locally by the hook and at the server by GitHub push
+      # protection.
+      #
+      # no-commit-to-branch is skipped for a different reason: checkout leaves a
+      # detached HEAD on pull requests but creates the local branch on a push, so
+      # on `push: main` the hook would see main and fail every merge. It guards
+      # the developer's commit, which is a local concern.
+      - name: Run pre-commit hooks
+        env:
+          SKIP: gitleaks,no-commit-to-branch
+        run: uv run pre-commit run --all-files --show-diff-on-failure
 
       - name: Test
         run: uv run pytest

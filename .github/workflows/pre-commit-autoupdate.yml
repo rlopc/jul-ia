@@ -8,15 +8,34 @@ on:
     - cron: "0 6 * * 1"
   workflow_dispatch:
 
-permissions:
-  contents: write
-  pull-requests: write
+# A manual dispatch launched while the weekly run is in flight would have both
+# pushing to the same branch.
+concurrency:
+  group: pre-commit-autoupdate
+  cancel-in-progress: false
+
+# Nothing here needs write access, so the workflow grants none by default and
+# the job that opens the pull request asks for what it needs.
+permissions: {}
 
 jobs:
   autoupdate:
     runs-on: ubuntu-latest
+    # The default is 360 minutes; this job takes about two.
+    timeout-minutes: 10
+    # `contents: write` pushes the update branch, `pull-requests: write` opens
+    # the pull request. Both belong to create-pull-request, not to the workflow.
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # create-pull-request authenticates the push with its own `token`
+          # input, so the checkout credentials are dead weight. Leaving them
+          # also risks the duplicate Authorization header the action reports
+          # against checkout v6+.
+          persist-credentials: false
 
       - uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
 
@@ -26,9 +45,11 @@ jobs:
       - name: Update hook revisions
         run: uv run pre-commit autoupdate
 
-      # Runs the updated hooks over the whole repo so the PR only appears when
-      # the new versions actually work. `|| true` keeps the job alive when a
-      # hook rewrites a file, which is a fix to include rather than a failure.
+      # Runs the updated hooks so anything they rewrite travels in the same pull
+      # request. `|| true` is what makes that possible: pre-commit exits non-zero
+      # both when a hook rewrites a file and when a hook is genuinely broken, and
+      # the two are indistinguishable here. So the pull request always opens, and
+      # its own CI run is what decides whether the update is good.
       - name: Run updated hooks
         run: uv run pre-commit run --all-files || true
 

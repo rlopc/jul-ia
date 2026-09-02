@@ -45,6 +45,9 @@ repos:
       - id: check-yaml
       - id: check-toml
       - id: check-merge-conflict
+      # The ruleset already rejects a push to main, but only once the commit
+      # exists and has to be moved onto a branch. This refuses to create it.
+      - id: no-commit-to-branch
 
   # detect-private-key only matches PEM/SSH/PGP headers. gitleaks matches provider
   # token patterns, which is what a pasted ANTHROPIC_API_KEY actually looks like.
