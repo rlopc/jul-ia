@@ -49,6 +49,6 @@ repos:
   # detect-private-key only matches PEM/SSH/PGP headers. gitleaks matches provider
   # token patterns, which is what a pasted ANTHROPIC_API_KEY actually looks like.
   - repo: https://github.com/gitleaks/gitleaks
-    rev: v8.30.1
+    rev: v8.30.0
     hooks:
       - id: gitleaks
